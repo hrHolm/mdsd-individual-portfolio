@@ -1,0 +1,84 @@
+grammar dk.sdu.mmmi.SpringBoard with org.eclipse.xtext.common.Terminals
+
+generate springBoard "http://www.sdu.dk/mmmi/SpringBoard"
+
+SpringBoard:
+	'package' ':' pkg=Package models=Models services=Services	
+;
+
+Package:
+	name=ID ('.' next=Package)?
+;
+
+Models:
+	'models' ':' types+=Model+
+;
+
+Model:
+	name=ID inh=Inherit? '{' fields+=Field* '}'
+;
+
+Field:
+	name=ID ':' type=Type (inv=Invariant)?
+;
+
+Invariant:
+	'[' prop=Property op=Operator value=INT ']'
+;
+
+Property:
+	'length'
+;
+
+Operator returns Operator:
+	{Lt} '<' | {Gt} '>' | {Eq} '=' | {Lteq} '<=' | {Gteq} '>=' | {Neq} '<>'
+;
+
+Type returns Type:
+	{Str} 'string' | {Dt} 'datetime' | {Lon} 'long' | {Int} 'int' | {Bool} 'bool' | {Flt} 'float' | {ModelType} (base=[Model] direction='*'?) | {ListOf} ('List' 'of' type=Type) | {Identifier} 'ID'
+;
+
+Inherit:
+	'inherits' base=[Model]
+;
+
+Services:
+	'services' ':' services+=Service+
+;
+
+Service:
+	base=[Model] '{' crud=CRUD? methods+=Method* '}'
+;
+
+CRUD:
+	'[' act += CRUDActions* ']'
+;
+
+enum CRUDActions:
+	C | R | U | D
+;
+
+Method:
+	req=Request name=ID inp=Input ':' type=Type res=Res?
+;
+
+Request returns Request:
+	{Local} 'local' | {Post} 'POST' | {Get} 'GET' | {Put} 'PUT' | {Delete} 'DELETE'
+;
+
+Res:
+	'{' comp=Comp'}'
+;
+
+Comp:
+	left=[Args] op=Operator right=[Field]
+;
+
+Input:
+	{Input} '(' args=Args? ')'
+;
+
+Args:
+	name=ID ':' type=Type (',' next=Args)?
+;
+
