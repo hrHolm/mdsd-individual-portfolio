@@ -15,6 +15,12 @@ import dk.sdu.mmmi.springBoard.ListOf
 import dk.sdu.mmmi.springBoard.ModelType
 import dk.sdu.mmmi.springBoard.Comp
 import dk.sdu.mmmi.springBoard.Method
+import dk.sdu.mmmi.springBoard.Model
+import dk.sdu.mmmi.springBoard.SpringBoard
+import dk.sdu.mmmi.springBoard.Template
+import java.util.List
+import dk.sdu.mmmi.springBoard.Project
+import dk.sdu.mmmi.springBoard.Uses
 
 /**
  * This class contains custom scoping description.
@@ -24,27 +30,72 @@ import dk.sdu.mmmi.springBoard.Method
  */
 class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 
+	// TODO: scope for models
 	override IScope getScope(EObject context, EReference reference) {
-		if (context instanceof Comp && reference == Literals.COMP__RIGHT) {
-			var methods = EcoreUtil2.getContainerOfType(context, Method);
-			val candidates = new ArrayList<Field>
-
-			var type = methods.type;
-
-			if (type instanceof ListOf) {
-				type = (type as ListOf).type
+		switch reference {
+			// scope for method comparisons
+			case reference == Literals.COMP__RIGHT: {
+				return scopeForTypeReference(context, reference)
 			}
-			if (type instanceof ModelType) {
-				var model = (type as ModelType)
-				candidates.addAll(model.base.getFields.filter(Field))
-				if (model.base.inh !== null) {
-					candidates.addAll(model.base.inh.base.getFields.filter(Field))
+			case reference == Literals.MODEL__BASE: {
+				// find template models
+				val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
+				val candidates = new ArrayList<Model>
+
+				var List<Template> templates = springBoard.declarations.filter(Template).toList
+				
+				for (Template t : templates) {
+					
+					candidates.addAll(t.models)
 				}
-			} else {
-				return super.getScope(context, reference)
+				
+				// TODO: Outer scope is second parameter!!
+				return Scopes.scopeFor(candidates)
 			}
-			return Scopes.scopeFor(candidates)
 		}
 		return super.getScope(context, reference)
+	// if (reference == Literals.MODEL__BASE || reference == Literals.SERVICE__BASE) {
+	// return scopeForModelReference(context)
+	// }	
 	}
+
+	// TODO: OUTER SCOPE
+	def protected IScope scopeForModelReference(EObject context) {
+		val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
+		val candidates = new ArrayList<Model>
+
+		var List<Template> templates = springBoard.declarations.filter(Template).toList
+		// var List<Project> projects = springBoard.declarations.filter(Project).toList
+		for (Template t : templates) {
+			candidates.addAll(t.models)
+		}
+		// for (Project p : projects) {
+		// candidates.addAll(p.models) // Avoid adding references from templates
+		// }
+		// TODO: Outer scope is second parameter!!
+		return Scopes.scopeFor(candidates)
+	}
+
+	// TODO: LOCAL SCOPE
+	def protected IScope scopeForTypeReference(EObject context, EReference reference) {
+		var methods = EcoreUtil2.getContainerOfType(context, Method);
+		val candidates = new ArrayList<Field>
+
+		var type = methods.type;
+
+		if (type instanceof ListOf) {
+			type = (type as ListOf).type
+		}
+		if (type instanceof ModelType) {
+			var model = (type as ModelType)
+			candidates.addAll(model.base.getFields.filter(Field))
+			if (model.base.inh !== null) {
+				candidates.addAll(model.base.inh.base.getFields.filter(Field))
+			}
+		} else {
+			return super.getScope(context, reference)
+		}
+		return Scopes.scopeFor(candidates)
+	}
+
 }

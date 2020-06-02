@@ -13,6 +13,7 @@ import javax.inject.Inject
 import dk.sdu.mmmi.springBoard.Model
 import java.util.ArrayList
 import java.util.List
+import dk.sdu.mmmi.springBoard.Project
 
 /**
  * Generates code from your model files on save.
@@ -31,36 +32,35 @@ class SpringBoardGenerator extends AbstractGenerator {
 	List<Model> modelsWithSubClasses = new ArrayList<Model>();
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(Greeting)
-//				.map[name]
-//				.join(', '))
 		val model = resource.allContents.filter(SpringBoard).next
-		val packName = createPackageName(model.pkg)
-
-		generateSpringProjectStructure(fsa, packName)
-
-		for (Model individualModel : model.models.filter(Model)) {
-			if (hasSubclasses(individualModel, model)) {
-				modelsWithSubClasses.add(individualModel)
-			}
-		}
-
-		model.services.forEach[ element |
-			serviceGenerator.createService(fsa, packName, element); 
-			serviceGenerator.createAbstractService(fsa, packName, element)]
-		model.models.filter(Model).forEach[ element |
-			modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, model))
-			repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses)
-			(model.services.forEach[serviceElement| if (serviceElement.base.name == element.name){
-				controllerGenerator.createController(element, serviceElement, fsa, packName, isASubClass(element))	
-			}
-				
-			])
 		
+		for (Project springProject : model.declarations.filter(Project)) {
+			val packName = createPackageName(springProject.pkg)
+
+			generateSpringProjectStructure(fsa, packName)
 	
-		]
+			for (Model individualModel : springProject.models.filter(Model)) {
+				if (hasSubclasses(individualModel, springProject)) {
+					modelsWithSubClasses.add(individualModel)
+				}
+			}
+	
+			springProject.services.forEach[ element |
+				serviceGenerator.createService(fsa, packName, element); 
+				serviceGenerator.createAbstractService(fsa, packName, element)]
+			springProject.models.filter(Model).forEach[ element |
+				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject))
+				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses)
+				(springProject.services.forEach[serviceElement| if (serviceElement.base.name == element.name){
+					controllerGenerator.createController(element, serviceElement, fsa, packName, isASubClass(element))	
+				}
+					
+				])
+			
+		
+			]
+		}
+		
 
 	}
 
@@ -75,8 +75,8 @@ class SpringBoardGenerator extends AbstractGenerator {
 	 * Important to check for Spring Data API
 	 * https://blog.netgloo.com/2014/12/18/handling-entities-inheritance-with-spring-data-jpa/
 	 */
-	def hasSubclasses(Model element, SpringBoard model) {
-		for (Model m : model.models.filter(Model)) {
+	def hasSubclasses(Model element, Project springProject) {
+		for (Model m : springProject.models.filter(Model)) {
 			if(m.inh !== null && m.inh.base.name == element.name) return true
 		}
 		return false

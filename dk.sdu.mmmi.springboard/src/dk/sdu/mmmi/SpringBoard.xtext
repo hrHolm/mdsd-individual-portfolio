@@ -3,7 +3,19 @@ grammar dk.sdu.mmmi.SpringBoard with org.eclipse.xtext.common.Terminals
 generate springBoard "http://www.sdu.dk/mmmi/SpringBoard"
 
 SpringBoard:
-	'package' ':' pkg=Package 'models' ':' models+=Model+ 'services' ':' services+=Service+
+	declarations+=(Template | Project)+
+;
+
+Template :
+	'template' name=ID 'models' ':' models+=Model+ ('services' ':' services+=Service+)?
+;
+
+Project:
+	'project' name=ID 'package' ':' pkg=Package ('uses' templates=Uses)? 'models' ':' models+=Model+ 'services' ':' services+=Service+
+;
+
+Uses:
+	base=[Template] (',' next=Uses)?
 ;
 
 Package:
@@ -11,7 +23,7 @@ Package:
 ;
 
 Model:
-	name=ID inh=Inherit? '{' fields+=Field* '}'
+	(('extension' 'of' base=[Model]) | name=ID inh=Inherit?) '{' fields+=Field* '}'
 ;
 
 Field:
