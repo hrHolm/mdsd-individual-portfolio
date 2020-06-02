@@ -13,14 +13,12 @@ import dk.sdu.mmmi.springBoard.Field
 import dk.sdu.mmmi.springBoard.SpringBoardPackage.Literals
 import dk.sdu.mmmi.springBoard.ListOf
 import dk.sdu.mmmi.springBoard.ModelType
-import dk.sdu.mmmi.springBoard.Comp
 import dk.sdu.mmmi.springBoard.Method
 import dk.sdu.mmmi.springBoard.Model
 import dk.sdu.mmmi.springBoard.SpringBoard
 import dk.sdu.mmmi.springBoard.Template
 import java.util.List
-import dk.sdu.mmmi.springBoard.Project
-import dk.sdu.mmmi.springBoard.Uses
+
 
 /**
  * This class contains custom scoping description.

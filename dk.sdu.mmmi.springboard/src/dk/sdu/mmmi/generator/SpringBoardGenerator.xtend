@@ -49,6 +49,11 @@ class SpringBoardGenerator extends AbstractGenerator {
 				serviceGenerator.createService(fsa, packName, element); 
 				serviceGenerator.createAbstractService(fsa, packName, element)]
 			springProject.models.filter(Model).forEach[ element |
+				// TODO: TEMP FIX, REPLACE WITH COMBINING TEMPLATE AND THIS MODEL, shadowing, etc. remember that when using a template you will not always overwrite anything on it!!!
+				if(element.name === null) {
+					element.name = element.base.name
+				}
+				// TODO: TEMP FIX
 				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject))
 				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses)
 				(springProject.services.forEach[serviceElement| if (serviceElement.base.name == element.name){
