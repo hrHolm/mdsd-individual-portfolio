@@ -38,19 +38,13 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 				return scopeForTypeReference(context, reference)
 			}
 			case reference == Literals.MODEL__BASE: {
-				// find template models
-				val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
-				val candidates = new ArrayList<Model>
-
-				var List<Template> templates = springBoard.declarations.filter(Template).toList
-				
-				for (Template t : templates) {
-					
-					candidates.addAll(t.models)
-				}
-				
-				// TODO: Outer scope is second parameter!!
-				return Scopes.scopeFor(candidates)
+				return scopeForModelReference(context, reference)
+			}
+			case reference == Literals.MODEL_TYPE__BASE: {
+				return scopeForModelReference(context, reference)
+			}
+			case reference == Literals.SERVICE__BASE: {
+				return scopeForModelReference(context, reference)
 			}
 		}
 		return super.getScope(context, reference)
@@ -60,20 +54,23 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 	}
 
 	// TODO: OUTER SCOPE
-	def protected IScope scopeForModelReference(EObject context) {
+	def protected IScope scopeForModelReference(EObject context, EReference reference) {
 		val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
-		val candidates = new ArrayList<Model>
+				val candidates = new ArrayList<Model>
 
-		var List<Template> templates = springBoard.declarations.filter(Template).toList
-		// var List<Project> projects = springBoard.declarations.filter(Project).toList
-		for (Template t : templates) {
-			candidates.addAll(t.models)
-		}
-		// for (Project p : projects) {
-		// candidates.addAll(p.models) // Avoid adding references from templates
-		// }
-		// TODO: Outer scope is second parameter!!
-		return Scopes.scopeFor(candidates)
+				var List<Template> templates = springBoard.declarations.filter(Template).toList
+				
+				for (Template t : templates) {
+					candidates.addAll(t.models)
+				}
+				//if (context instanceof ModelType) {
+				//	val ModelType modelType = EcoreUtil2.getContainerOfType(context, ModelType)
+				//	
+				//	return Scopes.scopeFor(modelType.base, Scopes.scopeFor(candidates))
+				//}
+				
+				// TODO: Outer scope is second parameter!! Have I done it correctly?
+				return Scopes.scopeFor(candidates, super.getScope(context, reference))
 	}
 
 	// TODO: LOCAL SCOPE
