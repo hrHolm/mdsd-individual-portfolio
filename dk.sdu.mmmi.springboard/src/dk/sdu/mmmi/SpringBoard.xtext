@@ -3,15 +3,11 @@ grammar dk.sdu.mmmi.SpringBoard with org.eclipse.xtext.common.Terminals
 generate springBoard "http://www.sdu.dk/mmmi/SpringBoard"
 
 SpringBoard:
-	'package' ':' pkg=Package models=Models services=Services	
+	'package' ':' pkg=Package 'models' ':' models+=Model+ 'services' ':' services+=Service+
 ;
 
 Package:
 	name=ID ('.' next=Package)?
-;
-
-Models:
-	'models' ':' types+=Model+
 ;
 
 Model:
@@ -40,10 +36,6 @@ Type returns Type:
 
 Inherit:
 	'inherits' base=[Model]
-;
-
-Services:
-	'services' ':' services+=Service+
 ;
 
 Service:
