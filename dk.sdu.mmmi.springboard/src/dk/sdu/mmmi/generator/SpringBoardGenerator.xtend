@@ -14,6 +14,9 @@ import dk.sdu.mmmi.springBoard.Model
 import java.util.ArrayList
 import java.util.List
 import dk.sdu.mmmi.springBoard.Project
+import dk.sdu.mmmi.springBoard.Template
+import dk.sdu.mmmi.springBoard.Uses
+import dk.sdu.mmmi.springBoard.Field
 
 /**
  * Generates code from your model files on save.
@@ -34,27 +37,34 @@ class SpringBoardGenerator extends AbstractGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		val model = resource.allContents.filter(SpringBoard).next
 		
+		// Find templates such that projects can depend on them
+		val templates = model.declarations.filter(Template)
+		
+		
 		for (Project springProject : model.declarations.filter(Project)) {
 			val projectName = springProject.name
 			val packName = createPackageName(springProject.pkg)
 
 			generateSpringProjectStructure(fsa, packName, projectName)
+			
+			var projectModels = springProject.models.toList
+			if (springProject.templates !== null) {
+				val usedTemplates = getTemplateList(springProject.templates)
+				projectModels = incorporateTemplates(projectModels, usedTemplates)
+			}
+			
 	
-			for (Model individualModel : springProject.models.filter(Model)) {
+			for (Model individualModel : projectModels) {
 				if (hasSubclasses(individualModel, springProject)) {
 					modelsWithSubClasses.add(individualModel)
 				}
 			}
 	
+			// TODO: overwrite service base with new combined model!
 			springProject.services.forEach[ element |
 				serviceGenerator.createService(fsa, packName, element, projectName); 
 				serviceGenerator.createAbstractService(fsa, packName, element, projectName)]
-			springProject.models.filter(Model).forEach[ element |
-				// TODO: TEMP FIX, REPLACE WITH COMBINING TEMPLATE AND THIS MODEL, shadowing, etc. remember that when using a template you will not always overwrite anything on it!!!
-				if(element.name === null) {
-					element.name = element.base.name
-				}
-				// TODO: TEMP FIX
+			projectModels.forEach[ element |
 				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject), projectName)
 				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses, projectName)
 				(springProject.services.forEach[serviceElement| if (serviceElement.base.name == element.name){
@@ -69,6 +79,76 @@ class SpringBoardGenerator extends AbstractGenerator {
 		
 
 	}
+	
+	/**
+	 * Takes care of combining templates with the project's own models - when a project makes extensions to templates
+	 * this method takes care of appending anything new, and shadow the templates' model if the same name is used
+	 */
+	def List<Model> incorporateTemplates(List<Model> projectModels, List<Template> templates) {
+		var List<Model> incorboratedList = new ArrayList
+		val List<Model> allTemplateModels = new ArrayList
+		for (t : templates) {
+			allTemplateModels.addAll(t.models)
+		}
+		
+		// to avoid java.util.ConcurrentModificationException
+		var List<Model> tmToRemove = new ArrayList
+		var List<Model> pmToRemove = new ArrayList
+		
+		// compare all models against each other, in order to determine if any shadowing is necessary
+		for (tm : allTemplateModels) {
+			for (pm : projectModels) {
+				if (pm.base == tm) { // an extension has been declared
+					val combinedModel = createCombinedModel(pm, tm)
+					incorboratedList.add(combinedModel)
+					pmToRemove.add(pm)
+					tmToRemove.add(tm)
+				}
+			}
+		}
+		allTemplateModels.removeAll(tmToRemove)
+		projectModels.removeAll(pmToRemove)
+		incorboratedList.addAll(allTemplateModels)
+		incorboratedList.addAll(projectModels)
+		
+		return incorboratedList
+	}
+		
+		def Model createCombinedModel(Model extensionModel, Model templateModel) {
+			var Model combinedModel = templateModel
+			
+			var List<Field> fieldsToRemove = new ArrayList
+			var List<Field> fieldsToAdd = new ArrayList
+				
+			for (ef : extensionModel.fields) {
+				for (tf : templateModel.fields) {
+					if (ef.name == tf.name) { // shadowing is necessary
+						fieldsToRemove.add(tf)
+						fieldsToAdd.add(ef)
+					} else {
+						fieldsToAdd.add(ef)
+						System.out.println(ef.name)
+					}
+				}
+			}
+			combinedModel.fields.removeAll(fieldsToRemove)
+			combinedModel.fields.addAll(fieldsToAdd)
+			return combinedModel
+		}
+		
+	// the template list are defined as a recursive rule
+	def List<Template> getTemplateList(Uses uses) {
+		var usesIter = uses
+		var List<Template> templateList = new ArrayList
+		templateList.add(usesIter.base)
+
+		while (usesIter.next !== null) {
+			usesIter = usesIter.next
+			templateList.add(usesIter.base)
+		}
+		return templateList
+	}
+
 
 	def isASubClass(Model element) {
 		if (element.inh !== null) {

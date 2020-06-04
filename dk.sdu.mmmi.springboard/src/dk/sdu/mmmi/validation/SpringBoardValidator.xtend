@@ -122,4 +122,8 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 				''
 		}
 	}
+	
+	//TODO: if a template is imported, you must write extension of before a model or service if necessary!
+	
+	//TODO: you cant write extension of without importing the necessary template!
 }
