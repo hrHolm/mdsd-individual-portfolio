@@ -47,7 +47,7 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 	}
 
 	/**
-	 * Provides scope for all templates (called candidates) and the project's own model definitions (via super.getScope)
+	 * Provides a nested scope for all templates' models (called candidates) and as outer scope, the project's own definitions (via super.getScope)
 	 * Note: even templates not necessarily imported gets visible, and therefore needs a corresponding validity check
 	 */ 
 	def protected IScope scopeForModelReference(EObject context, EReference reference) {

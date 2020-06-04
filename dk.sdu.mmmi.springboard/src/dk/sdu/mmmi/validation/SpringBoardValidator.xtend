@@ -18,6 +18,14 @@ import dk.sdu.mmmi.springBoard.Gt
 import dk.sdu.mmmi.springBoard.Lt
 import dk.sdu.mmmi.springBoard.Lteq
 import dk.sdu.mmmi.springBoard.Gteq
+import org.eclipse.emf.ecore.EObject
+import static extension org.eclipse.xtext.EcoreUtil2.*
+import dk.sdu.mmmi.springBoard.Project
+import java.util.List
+import dk.sdu.mmmi.springBoard.Template
+import dk.sdu.mmmi.springBoard.Uses
+import java.util.ArrayList
+import dk.sdu.mmmi.springBoard.Service
 
 /**
  * This class contains custom validation rules. 
@@ -123,9 +131,96 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 		}
 	}
 	
-	//TODO: if a template is imported, you must write extension of before a model or service if necessary!
+	/**
+	 * Make sure unique naming is done when importing templates
+	 */
+	@Check
+	def checkUniqueNamingFromImportedTemplates(Model model) {
+		val contextProject = (model as EObject).getContainerOfType(Project)
+		if (contextProject.templates !== null && model.name !== null) {
+			for (t : contextProject.templates.templateList) {
+				for (m : t.models) {
+					if (m.name.equalsIgnoreCase(model.name)) {
+						error('''The name: «model.name» is already used by the imported template: «t.name»''', SpringBoardPackage.Literals.MODEL__NAME)
+					}
+				}
+			}
+		}
+	}
 	
-	//TODO: you cant write extension of without importing the necessary template!
+	/**
+	 * Make sure unique naming is done when importing templates
+	 */
+	@Check
+	def checkUniqueNamingFromImportedTemplates(Service service) {
+		val contextProject = (service as EObject).getContainerOfType(Project)
+		if (contextProject.templates !== null && !service.isExtension) {
+			for (t : contextProject.templates.templateList) {
+				for (m : t.models) {
+					if (m.name.equalsIgnoreCase(service.base.name)) {
+						System.out.println("what")
+						error('''The name: «service.base.name» is already used by the imported template: «t.name»''', SpringBoardPackage.Literals.SERVICE__BASE)
+					}
+				}
+			}
+		}
+	}
 	
-	//TODO: cant write the same template twice
+	/**
+	 * Checks if the necessary templates have been imported when extending a model
+	 */ 
+	@Check
+	def checkTemplateImport(Model model) {
+		if (model.base !== null && !model.base.isImported(model)) {
+			error('''The model: «model.base.name» has not been imported from a template.''', SpringBoardPackage.Literals.MODEL__BASE)
+		}
+		
+	}
+	
+	/**
+	 * Checks if the necessary templates have been imported when extending a model
+	 */ 
+	@Check
+	def checkTemplateImport(Service service) {
+		if (service.extension && !service.base.isImported(service)) {
+			error('''The model: «service.base.name» has not been imported from a template.''', SpringBoardPackage.Literals.SERVICE__BASE)
+		}
+		
+	}
+	
+	/**
+	 * Checks if the necessary models are accessible if a model is used as a type
+	 */ 
+	@Check
+	def checkIfModelIsAccessableAsType(ModelType modelType) {
+		val contextProject = (modelType as EObject).getContainerOfType(Project)
+		if (modelType.base !== null && !contextProject.models.contains(modelType.base) && !modelType.base.isImported(modelType)) {
+			error('''The model: «modelType.base.name» is not accessable.''', SpringBoardPackage.Literals.MODEL_TYPE__BASE)
+		}
+	}
+	
+	protected def boolean isImported(Model base, EObject context) {
+		val contextProject = context.getContainerOfType(Project)
+		if (contextProject.templates === null) { // null-safety
+			return false
+		}
+		for (t : contextProject.templates.templateList) {
+			if (t.models.contains(base)) {
+				return true
+			}
+		}
+		return false
+	}
+	
+	def List<Template> getTemplateList(Uses uses) {
+		var usesIter = uses
+		var List<Template> templateList = new ArrayList
+		templateList.add(usesIter.base)
+
+		while (usesIter.next !== null) {
+			usesIter = usesIter.next
+			templateList.add(usesIter.base)
+		}
+		return templateList
+	}
 }
