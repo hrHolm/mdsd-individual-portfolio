@@ -17,6 +17,7 @@ import dk.sdu.mmmi.springBoard.Project
 import dk.sdu.mmmi.springBoard.Template
 import dk.sdu.mmmi.springBoard.Uses
 import dk.sdu.mmmi.springBoard.Field
+import dk.sdu.mmmi.springBoard.Service
 
 /**
  * Generates code from your model files on save.
@@ -38,7 +39,7 @@ class SpringBoardGenerator extends AbstractGenerator {
 		val model = resource.allContents.filter(SpringBoard).next
 		
 		// Find templates such that projects can depend on them
-		val templates = model.declarations.filter(Template)
+		//val templates = model.declarations.filter(Template)
 		
 		
 		for (Project springProject : model.declarations.filter(Project)) {
@@ -48,9 +49,11 @@ class SpringBoardGenerator extends AbstractGenerator {
 			generateSpringProjectStructure(fsa, packName, projectName)
 			
 			var projectModels = springProject.models.toList
+			var projectServices = springProject.services.toList
 			if (springProject.templates !== null) {
 				val usedTemplates = getTemplateList(springProject.templates)
-				projectModels = incorporateTemplates(projectModels, usedTemplates)
+				projectModels = incorporateTemplateModels(projectModels, usedTemplates)
+				//projectServices = incorporateTemplateServices(projectServices, usedTemplates)
 			}
 			
 	
@@ -79,12 +82,16 @@ class SpringBoardGenerator extends AbstractGenerator {
 		
 
 	}
+		
+	def List<Service> incorporateTemplateServices(List<Service> services, List<Template> templates) {
+		throw new UnsupportedOperationException("TODO: auto-generated method stub")
+	}
 	
 	/**
 	 * Takes care of combining templates with the project's own models - when a project makes extensions to templates
 	 * this method takes care of appending anything new, and shadow the templates' model if the same name is used
 	 */
-	def List<Model> incorporateTemplates(List<Model> projectModels, List<Template> templates) {
+	def List<Model> incorporateTemplateModels(List<Model> projectModels, List<Template> templates) {
 		var List<Model> incorboratedList = new ArrayList
 		val List<Model> allTemplateModels = new ArrayList
 		for (t : templates) {
