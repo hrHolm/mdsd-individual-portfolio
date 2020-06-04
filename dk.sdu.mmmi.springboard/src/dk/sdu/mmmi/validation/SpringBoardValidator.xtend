@@ -21,7 +21,7 @@ import dk.sdu.mmmi.springBoard.Gteq
 
 /**
  * This class contains custom validation rules. 
- *
+ * 
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class SpringBoardValidator extends AbstractSpringBoardValidator {
@@ -33,35 +33,35 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 
 	@Check
 	def checkCrudActions(CRUD crud) {
-		
+
 		val matchString = crud.getAct().toString().replace(", ", "")
 
 		val cMatcher = cPattern.matcher(matchString);
-		
+
 		if (cMatcher.find()) {
 			error('Only one Create method allowed', crud, null);
 		}
-		
+
 		val rMatcher = rPattern.matcher(matchString);
-		
+
 		if (rMatcher.find()) {
 			error('Only one Read method allowed', crud, null);
 		}
-		
+
 		val uMatcher = uPattern.matcher(matchString);
-		
+
 		if (uMatcher.find()) {
-			error('Only one Update method allowed', crud , null);
+			error('Only one Update method allowed', crud, null);
 		}
-		
+
 		val dMatcher = dPattern.matcher(matchString);
-		
+
 		if (dMatcher.find()) {
 			error('Only one Delete method allowed', crud, null);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Inspired by Bettini
 	 */
@@ -73,28 +73,33 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 		var current = model.inh.base
 		while (current !== null) {
 			if (visitedEntities.contains(current)) {
-				error("Cycle in hierarchy of model '"+current.name+"'",
-					SpringBoardPackage.Literals.MODEL__INH)
+				error("Cycle in hierarchy of model '" + current.name + "'", SpringBoardPackage.Literals.MODEL__INH)
 				return
 			}
 			visitedEntities.add(current)
 			current = current.inh.base
 		}
 	}
-	
+
+	/**
+	 * This check only needs to happen when a model is not an extension - 
+	 * this way it is always ensured that an ID is present, since the template's model must have ID's
+	 */
 	@Check
 	def checkOnlySingleIdForModel(Model model) {
-		if (model.inh !== null) {
-			if (!model.fields.filter[ f | f.type instanceof Identifier].empty) {
-				error("Subclasses must not have an ID field.", SpringBoardPackage.Literals.MODEL__FIELDS)
-			}
-		} else {
-			if (model.fields.filter[ f | f.type instanceof Identifier].size != 1) {
-				error("A model must have a single ID field.", SpringBoardPackage.Literals.MODEL__NAME)
+		if (model.base === null) {
+			if (model.inh !== null) {
+				if (!model.fields.filter[f|f.type instanceof Identifier].empty) {
+					error("Subclasses must not have an ID field.", SpringBoardPackage.Literals.MODEL__FIELDS)
+				}
+			} else {
+				if (model.fields.filter[f|f.type instanceof Identifier].size != 1) {
+					error("A model must have a single ID field.", SpringBoardPackage.Literals.MODEL__NAME)
+				}
 			}
 		}
 	}
-	
+
 	@Check
 	def checkComparisonOperator(Comp comp) {
 		if (comp.left.type.class !== comp.right.type.class) {
@@ -105,14 +110,16 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 			ListOf,
 			Bool,
 			Str,
-			Identifier: switch comp.op {
-				Gt,
-				Lt,
-				Lteq,
-				Gteq: error("Invalid operator for this type", comp, SpringBoardPackage.Literals.COMP__OP)
-				default:''
-			}
-			default: ''
+			Identifier:
+				switch comp.op {
+					Gt,
+					Lt,
+					Lteq,
+					Gteq: error("Invalid operator for this type", comp, SpringBoardPackage.Literals.COMP__OP)
+					default: ''
+				}
+			default:
+				''
 		}
 	}
 }
