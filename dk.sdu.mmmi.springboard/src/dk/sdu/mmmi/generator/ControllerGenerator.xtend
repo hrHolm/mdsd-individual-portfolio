@@ -50,10 +50,9 @@ public class «model.name»Controller {
 '''
 	}
 
-	def createController(Model model, Service service, IFileSystemAccess2 fsa, String packName, boolean isASubClass) {
+	def createController(Model model, Service service, IFileSystemAccess2 fsa, String packName, String projectName, boolean isASubClass) {
 		//if (!isASubClass) {
-			fsa.generateFile(
-				mavenSrcStructure + packName.replace('.', '/') + "/controllers/" + model.name + "Controller.java",
+			fsa.generateFile(projectName + "/" + mavenSrcStructure + packName.replace('.', '/') + "/controllers/" + model.name + "Controller.java",
 				generateController(model, service, packName, isASubClass)
 			)
 		//}

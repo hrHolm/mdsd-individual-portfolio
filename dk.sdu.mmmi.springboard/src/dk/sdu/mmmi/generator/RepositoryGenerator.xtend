@@ -42,15 +42,14 @@ class RepositoryGenerator {
 		'''
 	}
 
-	def createRepository(Model model, IFileSystemAccess2 fsa, String packName, List<Model> modelsWithSubClasses) {
-		generateFile(model, fsa, packName, modelsWithSubClasses,
+	def createRepository(Model model, IFileSystemAccess2 fsa, String packName, List<Model> modelsWithSubClasses, String projectName) {
+		generateFile(model, fsa, packName, modelsWithSubClasses, projectName,
 			generateRepository(model, packName, modelsWithSubClasses));
 	}
 
-	def generateFile(Model model, IFileSystemAccess2 access2, String packName, List<Model> modelsWithSubClasses,
+	def generateFile(Model model, IFileSystemAccess2 access2, String packName, List<Model> modelsWithSubClasses, String projectName,
 		CharSequence contents) {
-		access2.generateFile(
-			"src/main/java/" + packName.replace('.', '/') + "/repositories/" + model.name + "Repository.java",
+		access2.generateFile(projectName + "/" + "src/main/java/" + packName.replace('.', '/') + "/repositories/" + model.name + "Repository.java",
 			contents);
 	}
 

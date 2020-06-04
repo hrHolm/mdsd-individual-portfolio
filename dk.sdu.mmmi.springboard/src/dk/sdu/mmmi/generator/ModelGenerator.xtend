@@ -163,8 +163,8 @@ class ModelGenerator {
 	}
 	
 	
-	def createModel(Model model, IFileSystemAccess2 fsa, String packName, boolean hasSubclasses) {
-		fsa.generateFile(mavenSrcStructure+packName.replace('.', '/')+"/models/"+model.name+".java", 
+	def createModel(Model model, IFileSystemAccess2 fsa, String packName, boolean hasSubclasses, String projectName) {
+		fsa.generateFile(projectName + "/" + mavenSrcStructure+packName.replace('.', '/')+"/models/"+model.name+".java", 
 			generateModel(model, packName, hasSubclasses)
 		)
 	}

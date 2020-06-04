@@ -276,11 +276,11 @@ class ServiceGenerator {
 	
 	def dispatch CharSequence show(Args a)'''«a.type.show» «a.name» «IF a.next !== null», «a.next.show» «ENDIF»'''
 	
-	def createService(IFileSystemAccess2 fsa, String packageName, Service service) {
-		fsa.generateFile(mavenSrcStructure+packageName.replace('.', '/')+"/services/I"+service.base.name+'.java', generateService(packageName, service))
+	def createService(IFileSystemAccess2 fsa, String packageName, Service service, String projectName) {
+		fsa.generateFile(projectName + "/" + mavenSrcStructure+packageName.replace('.', '/')+"/services/I"+service.base.name+'.java', generateService(packageName, service))
 	}
 	
-	def createAbstractService(IFileSystemAccess2 fsa, String packageName, Service service) {
-		fsa.generateFile(mavenSrcStructure+packageName.replace('.', '/')+"/services/impl/Abstract"+service.base.name+'Impl.java', generateMethodStubs(packageName, service))
+	def createAbstractService(IFileSystemAccess2 fsa, String packageName, Service service, String projectName) {
+		fsa.generateFile(projectName + "/" + mavenSrcStructure+packageName.replace('.', '/')+"/services/impl/Abstract"+service.base.name+'Impl.java', generateMethodStubs(packageName, service))
 	}
 }

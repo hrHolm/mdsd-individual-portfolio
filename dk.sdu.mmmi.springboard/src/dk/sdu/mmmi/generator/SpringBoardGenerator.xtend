@@ -35,9 +35,10 @@ class SpringBoardGenerator extends AbstractGenerator {
 		val model = resource.allContents.filter(SpringBoard).next
 		
 		for (Project springProject : model.declarations.filter(Project)) {
+			val projectName = springProject.name
 			val packName = createPackageName(springProject.pkg)
 
-			generateSpringProjectStructure(fsa, packName)
+			generateSpringProjectStructure(fsa, packName, projectName)
 	
 			for (Model individualModel : springProject.models.filter(Model)) {
 				if (hasSubclasses(individualModel, springProject)) {
@@ -46,18 +47,18 @@ class SpringBoardGenerator extends AbstractGenerator {
 			}
 	
 			springProject.services.forEach[ element |
-				serviceGenerator.createService(fsa, packName, element); 
-				serviceGenerator.createAbstractService(fsa, packName, element)]
+				serviceGenerator.createService(fsa, packName, element, projectName); 
+				serviceGenerator.createAbstractService(fsa, packName, element, projectName)]
 			springProject.models.filter(Model).forEach[ element |
 				// TODO: TEMP FIX, REPLACE WITH COMBINING TEMPLATE AND THIS MODEL, shadowing, etc. remember that when using a template you will not always overwrite anything on it!!!
 				if(element.name === null) {
 					element.name = element.base.name
 				}
 				// TODO: TEMP FIX
-				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject))
-				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses)
+				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject), projectName)
+				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses, projectName)
 				(springProject.services.forEach[serviceElement| if (serviceElement.base.name == element.name){
-					controllerGenerator.createController(element, serviceElement, fsa, packName, isASubClass(element))	
+					controllerGenerator.createController(element, serviceElement, fsa, packName, projectName, isASubClass(element))	
 				}
 					
 				])
@@ -87,16 +88,13 @@ class SpringBoardGenerator extends AbstractGenerator {
 		return false
 	}
 
-	/**
-	 * TODO: Remove hardcoded names 
-	 */
-	def generateSpringProjectStructure(IFileSystemAccess2 fsa, String packName) {
-		fsa.generateFile("/pom.xml", generatePom(packName))
-		fsa.generateFile(mavenSrcStructure + packName.replace('.', '/') + "/DemoApplication.java",
+	def generateSpringProjectStructure(IFileSystemAccess2 fsa, String packName, String projectName) {
+		fsa.generateFile(projectName + "/pom.xml", generatePom(packName))
+		fsa.generateFile(projectName + "/" + mavenSrcStructure + packName.replace('.', '/') + "/DemoApplication.java",
 			generateSource(packName))
-		fsa.generateFile(mavenTestStructure + packName.replace('.', '/') + "/DemoApplicationTests.java",
+		fsa.generateFile(projectName + "/" + mavenTestStructure + packName.replace('.', '/') + "/DemoApplicationTests.java",
 			generateTest(packName))
-		fsa.generateFile("src/main/resources/application.properties", generateProperties())
+		fsa.generateFile(projectName + "/" + "src/main/resources/application.properties", generateProperties())
 	}
 
 	/**
