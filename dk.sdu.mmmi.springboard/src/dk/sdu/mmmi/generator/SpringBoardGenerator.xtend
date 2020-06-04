@@ -38,13 +38,13 @@ class SpringBoardGenerator extends AbstractGenerator {
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		val model = resource.allContents.filter(SpringBoard).next
-		
+
 		for (Project springProject : model.declarations.filter(Project)) {
 			val projectName = springProject.name
 			val packName = createPackageName(springProject.pkg)
 
 			generateSpringProjectStructure(fsa, packName, projectName)
-			
+
 			var projectModels = springProject.models.toList
 			var projectServices = springProject.services.toList
 			if (springProject.templates !== null) {
@@ -52,43 +52,42 @@ class SpringBoardGenerator extends AbstractGenerator {
 				projectModels = incorporateTemplateModels(projectModels, usedTemplates)
 				projectServices = incorporateTemplateServices(projectServices, usedTemplates)
 			}
-	
+
 			for (Model individualModel : projectModels) {
 				if (hasSubclasses(individualModel, springProject)) {
 					modelsWithSubClasses.add(individualModel)
 				}
 			}
-	
-			projectServices.forEach[ element |
-				serviceGenerator.createService(fsa, packName, element, projectName); 
-				serviceGenerator.createAbstractService(fsa, packName, element, projectName)]
-			projectModels.forEach[ element |
+
+			projectServices.forEach [ element |
+				serviceGenerator.createService(fsa, packName, element, projectName);
+				serviceGenerator.createAbstractService(fsa, packName, element, projectName)
+			]
+			projectModels.forEach [ element |
 				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject), projectName)
 				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses, projectName)
-				(springProject.services.forEach[serviceElement| if (serviceElement.base.name == element.name){
-					controllerGenerator.createController(element, serviceElement, fsa, packName, projectName, isASubClass(element))	
-				}
-					
+				(springProject.services.forEach [ serviceElement |
+					if (serviceElement.base.name == element.name) {
+						controllerGenerator.createController(element, serviceElement, fsa, packName, projectName,
+							isASubClass(element))
+					}
 				])
-			
-		
 			]
 		}
-		
 
 	}
-		
+
 	def List<Service> incorporateTemplateServices(List<Service> projectServices, List<Template> templates) {
 		var List<Service> incorboratedList = new ArrayList
 		val List<Service> allTemplateServices = new ArrayList
 		for (t : templates) {
 			allTemplateServices.addAll(t.services)
 		}
-		
+
 		// to avoid java.util.ConcurrentModificationException
 		var List<Service> tsToRemove = new ArrayList
 		var List<Service> psToRemove = new ArrayList
-		
+
 		// compare all models against each other, in order to determine if any shadowing is necessary
 		for (ts : allTemplateServices) {
 			for (ps : projectServices) {
@@ -104,21 +103,21 @@ class SpringBoardGenerator extends AbstractGenerator {
 		projectServices.removeAll(psToRemove)
 		incorboratedList.addAll(allTemplateServices)
 		incorboratedList.addAll(projectServices)
-		
+
 		return incorboratedList
 	}
-		
+
 	def createCombinedService(Service extensionService, Service templateService) {
 		var Service combinedService = templateService
-			
+
 		var List<Method> methodsToRemove = new ArrayList
 		var List<Method> methodsToAdd = new ArrayList
-			
+
 		// if CRUD is defined in an extension, it should always overwrite
 		if (extensionService.crud !== null) {
 			combinedService.crud = extensionService.crud
 		}
-			
+
 		for (em : extensionService.methods) {
 			for (tm : templateService.methods) {
 				if (em.name == tm.name) { // shadowing is necessary
@@ -133,7 +132,7 @@ class SpringBoardGenerator extends AbstractGenerator {
 		combinedService.methods.addAll(methodsToAdd)
 		return combinedService
 	}
-	
+
 	/**
 	 * Takes care of combining templates with the project's own models - when a project makes extensions to templates
 	 * this method takes care of appending anything new, and shadow the templates' model if the same name is used
@@ -144,11 +143,11 @@ class SpringBoardGenerator extends AbstractGenerator {
 		for (t : templates) {
 			allTemplateModels.addAll(t.models)
 		}
-		
+
 		// to avoid java.util.ConcurrentModificationException
 		var List<Model> tmToRemove = new ArrayList
 		var List<Model> pmToRemove = new ArrayList
-		
+
 		// compare all models against each other, in order to determine if any shadowing is necessary
 		for (tm : allTemplateModels) {
 			for (pm : projectModels) {
@@ -164,31 +163,31 @@ class SpringBoardGenerator extends AbstractGenerator {
 		projectModels.removeAll(pmToRemove)
 		incorboratedList.addAll(allTemplateModels)
 		incorboratedList.addAll(projectModels)
-		
+
 		return incorboratedList
 	}
-		
-		def Model createCombinedModel(Model extensionModel, Model templateModel) {
-			var Model combinedModel = templateModel
-			
-			var List<Field> fieldsToRemove = new ArrayList
-			var List<Field> fieldsToAdd = new ArrayList
-				
-			for (ef : extensionModel.fields) {
-				for (tf : templateModel.fields) {
-					if (ef.name == tf.name) { // shadowing is necessary
-						fieldsToRemove.add(tf)
-						fieldsToAdd.add(ef)
-					} else {
-						fieldsToAdd.add(ef)
-					}
+
+	def Model createCombinedModel(Model extensionModel, Model templateModel) {
+		var Model combinedModel = templateModel
+
+		var List<Field> fieldsToRemove = new ArrayList
+		var List<Field> fieldsToAdd = new ArrayList
+
+		for (ef : extensionModel.fields) {
+			for (tf : templateModel.fields) {
+				if (ef.name == tf.name) { // shadowing is necessary
+					fieldsToRemove.add(tf)
+					fieldsToAdd.add(ef)
+				} else {
+					fieldsToAdd.add(ef)
 				}
 			}
-			combinedModel.fields.removeAll(fieldsToRemove)
-			combinedModel.fields.addAll(fieldsToAdd)
-			return combinedModel
 		}
-		
+		combinedModel.fields.removeAll(fieldsToRemove)
+		combinedModel.fields.addAll(fieldsToAdd)
+		return combinedModel
+	}
+
 	// the template list are defined as a recursive rule
 	def List<Template> getTemplateList(Uses uses) {
 		var usesIter = uses
@@ -201,7 +200,6 @@ class SpringBoardGenerator extends AbstractGenerator {
 		}
 		return templateList
 	}
-
 
 	def isASubClass(Model element) {
 		if (element.inh !== null) {
@@ -225,8 +223,8 @@ class SpringBoardGenerator extends AbstractGenerator {
 		fsa.generateFile(projectName + "/pom.xml", generatePom(packName))
 		fsa.generateFile(projectName + "/" + mavenSrcStructure + packName.replace('.', '/') + "/DemoApplication.java",
 			generateSource(packName))
-		fsa.generateFile(projectName + "/" + mavenTestStructure + packName.replace('.', '/') + "/DemoApplicationTests.java",
-			generateTest(packName))
+		fsa.generateFile(projectName + "/" + mavenTestStructure + packName.replace('.', '/') +
+			"/DemoApplicationTests.java", generateTest(packName))
 		fsa.generateFile(projectName + "/" + "src/main/resources/application.properties", generateProperties())
 	}
 
@@ -235,29 +233,29 @@ class SpringBoardGenerator extends AbstractGenerator {
 	 * OR: people should make this themselves
 	 */
 	def CharSequence generateProperties() '''
-	# H2
-	spring.datasource.url=jdbc:h2:mem:jpadb 
-	spring.datasource.username=sa
-	spring.datasource.password=mypass
-	spring.datasource.driverClassName=org.h2.Driver
-	spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-	spring.jpa.generate-ddl=true
-	spring.jpa.hibernate.ddl-auto=create
+		# H2
+		spring.datasource.url=jdbc:h2:mem:jpadb 
+		spring.datasource.username=sa
+		spring.datasource.password=mypass
+		spring.datasource.driverClassName=org.h2.Driver
+		spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+		spring.jpa.generate-ddl=true
+		spring.jpa.hibernate.ddl-auto=create
 	'''
 
 	def CharSequence generateTest(String packName) '''
-	package «packName»;
-	import org.junit.jupiter.api.Test;
-	import org.springframework.boot.test.context.SpringBootTest;
-	
-	@SpringBootTest
-	class DemoApplicationTests {
+		package «packName»;
+		import org.junit.jupiter.api.Test;
+		import org.springframework.boot.test.context.SpringBootTest;
 		
-	  @Test
-	  void contextLoads() {
-	  }
-	  
-	}
+		@SpringBootTest
+		class DemoApplicationTests {
+			
+			 @Test
+			 void contextLoads() {
+			 }
+			 
+		}
 	'''
 
 	def createPackageName(Package pack) {
