@@ -18,7 +18,7 @@ import dk.sdu.mmmi.springBoard.Model
 import dk.sdu.mmmi.springBoard.SpringBoard
 import dk.sdu.mmmi.springBoard.Template
 import java.util.List
-
+import dk.sdu.mmmi.springBoard.Project
 
 /**
  * This class contains custom scoping description.
@@ -37,10 +37,14 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 				return scopeForModelReference(context, reference)
 			}
 			case reference == Literals.MODEL_TYPE__BASE: {
-				return scopeForModelReference(context, reference)
+				if (EcoreUtil2.getContainerOfType(context, Project) !== null) { // we are in project context
+					return scopeForModelReference(context, reference)
+				}
 			}
 			case reference == Literals.SERVICE__BASE: {
-				return scopeForModelReference(context, reference)
+				if (EcoreUtil2.getContainerOfType(context, Project) !== null) { // we are in project context
+					return scopeForModelReference(context, reference)
+				}
 			}
 		}
 		return super.getScope(context, reference)
@@ -49,6 +53,11 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 	/**
 	 * Provides a nested scope for all templates' models (called candidates) and as outer scope, the project's own definitions (via super.getScope)
 	 * Note: even templates not necessarily imported gets visible, and therefore needs a corresponding validity check
+	 * 
+	 * 
+	 * Having the template models as outer scope ensures that projects that the projects own definitions comes first
+	 * when looking for a reference. This is important when you dont want to use a template, but want to use the same
+	 * name of the models
 	 */ 
 	def protected IScope scopeForModelReference(EObject context, EReference reference) {
 		val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
@@ -57,10 +66,13 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 		var List<Template> templates = springBoard.declarations.filter(Template).toList
 		for (Template t : templates) {
 			candidates.addAll(t.models)
-		}			
-		return Scopes.scopeFor(candidates, super.getScope(context, reference))
+		}
+		val project = EcoreUtil2.getContainerOfType(context, Project)
+		val innerModels = project.models.filter[e | e.name !== null]
+		return Scopes.scopeFor(innerModels, Scopes.scopeFor(candidates))
 	}
 
+	//TODO: if enough time, add support for extended fields in models
 	def protected IScope scopeForTypeReference(EObject context, EReference reference) {
 		var methods = EcoreUtil2.getContainerOfType(context, Method);
 		val candidates = new ArrayList<Field>
