@@ -51,7 +51,7 @@ Inherit:
 ;
 
 Service:
-	base=[Model] '{' crud=CRUD? methods+=Method* '}'
+	(extension?='extension' 'of')? base=[Model] '{' crud=CRUD? methods+=Method* '}'
 ;
 
 CRUD:

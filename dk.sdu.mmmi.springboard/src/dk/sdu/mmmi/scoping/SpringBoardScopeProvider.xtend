@@ -28,10 +28,8 @@ import java.util.List
  */
 class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 
-	// TODO: scope for models
 	override IScope getScope(EObject context, EReference reference) {
 		switch reference {
-			// scope for method comparisons
 			case reference == Literals.COMP__RIGHT: {
 				return scopeForTypeReference(context, reference)
 			}
@@ -46,32 +44,23 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 			}
 		}
 		return super.getScope(context, reference)
-	// if (reference == Literals.MODEL__BASE || reference == Literals.SERVICE__BASE) {
-	// return scopeForModelReference(context)
-	// }	
 	}
 
-	// TODO: OUTER SCOPE
+	/**
+	 * Provides scope for all templates (called candidates) and the project's own model definitions (via super.getScope)
+	 * Note: even templates not necessarily imported gets visible, and therefore needs a corresponding validity check
+	 */ 
 	def protected IScope scopeForModelReference(EObject context, EReference reference) {
 		val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
-				val candidates = new ArrayList<Model>
+		val candidates = new ArrayList<Model>
 
-				var List<Template> templates = springBoard.declarations.filter(Template).toList
-				
-				for (Template t : templates) {
-					candidates.addAll(t.models)
-				}
-				//if (context instanceof ModelType) {
-				//	val ModelType modelType = EcoreUtil2.getContainerOfType(context, ModelType)
-				//	
-				//	return Scopes.scopeFor(modelType.base, Scopes.scopeFor(candidates))
-				//}
-				
-				// TODO: Outer scope is second parameter!! Have I done it correctly?
-				return Scopes.scopeFor(candidates, super.getScope(context, reference))
+		var List<Template> templates = springBoard.declarations.filter(Template).toList
+		for (Template t : templates) {
+			candidates.addAll(t.models)
+		}			
+		return Scopes.scopeFor(candidates, super.getScope(context, reference))
 	}
 
-	// TODO: LOCAL SCOPE
 	def protected IScope scopeForTypeReference(EObject context, EReference reference) {
 		var methods = EcoreUtil2.getContainerOfType(context, Method);
 		val candidates = new ArrayList<Field>
