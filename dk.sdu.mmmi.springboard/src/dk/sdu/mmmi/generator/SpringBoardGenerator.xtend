@@ -18,6 +18,7 @@ import dk.sdu.mmmi.springBoard.Template
 import dk.sdu.mmmi.springBoard.Uses
 import dk.sdu.mmmi.springBoard.Field
 import dk.sdu.mmmi.springBoard.Service
+import dk.sdu.mmmi.springBoard.Method
 
 /**
  * Generates code from your model files on save.
@@ -38,10 +39,6 @@ class SpringBoardGenerator extends AbstractGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		val model = resource.allContents.filter(SpringBoard).next
 		
-		// Find templates such that projects can depend on them
-		//val templates = model.declarations.filter(Template)
-		
-		
 		for (Project springProject : model.declarations.filter(Project)) {
 			val projectName = springProject.name
 			val packName = createPackageName(springProject.pkg)
@@ -53,9 +50,8 @@ class SpringBoardGenerator extends AbstractGenerator {
 			if (springProject.templates !== null) {
 				val usedTemplates = getTemplateList(springProject.templates)
 				projectModels = incorporateTemplateModels(projectModels, usedTemplates)
-				//projectServices = incorporateTemplateServices(projectServices, usedTemplates)
+				projectServices = incorporateTemplateServices(projectServices, usedTemplates)
 			}
-			
 	
 			for (Model individualModel : projectModels) {
 				if (hasSubclasses(individualModel, springProject)) {
@@ -63,8 +59,7 @@ class SpringBoardGenerator extends AbstractGenerator {
 				}
 			}
 	
-			// TODO: overwrite service base with new combined model!
-			springProject.services.forEach[ element |
+			projectServices.forEach[ element |
 				serviceGenerator.createService(fsa, packName, element, projectName); 
 				serviceGenerator.createAbstractService(fsa, packName, element, projectName)]
 			projectModels.forEach[ element |
@@ -83,8 +78,60 @@ class SpringBoardGenerator extends AbstractGenerator {
 
 	}
 		
-	def List<Service> incorporateTemplateServices(List<Service> services, List<Template> templates) {
-		throw new UnsupportedOperationException("TODO: auto-generated method stub")
+	def List<Service> incorporateTemplateServices(List<Service> projectServices, List<Template> templates) {
+		var List<Service> incorboratedList = new ArrayList
+		val List<Service> allTemplateServices = new ArrayList
+		for (t : templates) {
+			allTemplateServices.addAll(t.services)
+		}
+		
+		// to avoid java.util.ConcurrentModificationException
+		var List<Service> tsToRemove = new ArrayList
+		var List<Service> psToRemove = new ArrayList
+		
+		// compare all models against each other, in order to determine if any shadowing is necessary
+		for (ts : allTemplateServices) {
+			for (ps : projectServices) {
+				if (ps.base == ts.base) { // an extension has been declared
+					val combinedService = createCombinedService(ps, ts)
+					incorboratedList.add(combinedService)
+					psToRemove.add(ps)
+					tsToRemove.add(ts)
+				}
+			}
+		}
+		allTemplateServices.removeAll(tsToRemove)
+		projectServices.removeAll(psToRemove)
+		incorboratedList.addAll(allTemplateServices)
+		incorboratedList.addAll(projectServices)
+		
+		return incorboratedList
+	}
+		
+	def createCombinedService(Service extensionService, Service templateService) {
+		var Service combinedService = templateService
+			
+		var List<Method> methodsToRemove = new ArrayList
+		var List<Method> methodsToAdd = new ArrayList
+			
+		// if CRUD is defined in an extension, it should always overwrite
+		if (extensionService.crud !== null) {
+			combinedService.crud = extensionService.crud
+		}
+			
+		for (em : extensionService.methods) {
+			for (tm : templateService.methods) {
+				if (em.name == tm.name) { // shadowing is necessary
+					methodsToRemove.add(tm)
+					methodsToAdd.add(em)
+				} else {
+					methodsToAdd.add(em)
+				}
+			}
+		}
+		combinedService.methods.removeAll(methodsToRemove)
+		combinedService.methods.addAll(methodsToAdd)
+		return combinedService
 	}
 	
 	/**
@@ -134,7 +181,6 @@ class SpringBoardGenerator extends AbstractGenerator {
 						fieldsToAdd.add(ef)
 					} else {
 						fieldsToAdd.add(ef)
-						System.out.println(ef.name)
 					}
 				}
 			}
