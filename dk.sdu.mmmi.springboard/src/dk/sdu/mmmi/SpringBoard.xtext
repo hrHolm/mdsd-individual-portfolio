@@ -7,7 +7,7 @@ SpringBoard:
 ;
 
 Template :
-	'template' name=ID 'models' ':' models+=Model+ ('services' ':' services+=Service+)?
+	'template' name=ID 'models' ':' models+=Model+ 'services' ':' services+=Service+
 ;
 
 Project:
@@ -27,17 +27,59 @@ Model:
 ;
 
 Field:
-	name=ID ':' type=Type (inv=Invariant)?
+	name=ID ':' type=Type inv=Invariant?
 ;
 
+// Improved invariants START
 Invariant:
-	'[' prop=Property op=Operator value=INT ']'
+	'[' logic=BoolLogic ']'
 ;
 
-Property:
-	'length'
+BoolLogic returns BoolLogic:
+	Conjunction ({BoolOr.left=current} '||' right=BoolLogic)?
 ;
 
+Conjunction returns BoolLogic:
+	BoolPrim ({BoolAnd.left=current} '&&' right=Conjunction)?
+;
+
+BoolPrim returns BoolLogic:
+	Requirement
+;
+
+Requirement:
+	left=Exp op=Operator right=Exp
+;
+
+Exp:
+	MultDiv (
+		({Plus.left=current} '+' | {Minus.left=current} '-') right=MultDiv
+	)*
+;
+
+MultDiv returns Exp:
+	Prim (
+		({Mult.left=current} '*' | {Div.left=current} '/') right=Prim
+	)*
+;
+
+Prim returns Exp:
+	Num | Parenthesis | Var
+;
+
+Var:
+	variable=[Field]
+;
+
+Parenthesis returns Exp:
+	'(' Exp ')'
+;
+
+Num:
+	value=INT
+;
+
+// Improved invariants END
 Operator returns Operator:
 	{Lt} '<' | {Gt} '>' | {Eq} '=' | {Lteq} '<=' | {Gteq} '>=' | {Neq} '<>'
 ;

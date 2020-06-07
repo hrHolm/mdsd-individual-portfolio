@@ -18,8 +18,12 @@ import dk.sdu.mmmi.springBoard.Lteq
 import dk.sdu.mmmi.springBoard.Eq
 import dk.sdu.mmmi.springBoard.Gt
 import dk.sdu.mmmi.springBoard.Flt
+import javax.inject.Inject
+import dk.sdu.mmmi.springBoard.BoolLogic
 
 class ModelGenerator {
+	
+	@Inject extension InvariantGenerator invariantGenerator
 	
 	val mavenSrcStructure = "src/main/java/"
 	/**
@@ -73,38 +77,11 @@ class ModelGenerator {
 	
 	'''
 	
-	/**
-	 * TODO: hardcoded length
-	 */
 	def CharSequence generateInvariant(Field f)'''
-	if (!(«f.name».«f.inv.prop»() «generateOperator(f.inv.op)» «f.inv.value»)) {
-		throw new IllegalArgumentException("«f.inv.prop» of «f.name» must be «generateOperator(f.inv.op)» «f.inv.value».");
+	if (!«f.inv.logic.genLogic») {
+		throw new IllegalArgumentException("Requirement not satisfied.");
 	}
 	'''
-	
-	def dispatch CharSequence generateOperator(Lt operator) {
-		return "<"
-	}
-	
-	def dispatch CharSequence generateOperator(Gt operator) {
-		return ">"
-	}
-	
-	def dispatch CharSequence generateOperator(Eq operator) {
-		return "=="
-	}
-	
-	def dispatch CharSequence generateOperator(Lteq operator) {
-		return "<="
-	}
-	
-	def dispatch CharSequence generateOperator(Gteq operator) {
-		return ">="
-	}
-	
-	def dispatch CharSequence generateOperator(Neq operator) {
-		return "!="
-	}
 	
 	def dispatch CharSequence generateTypeAnnotation(ListOf f)'''
 	«IF f.type instanceof ModelType»
@@ -144,7 +121,7 @@ class ModelGenerator {
 	}
 	
 	/**
-	 * Ignore warning, seems to be a bug?
+	 * Ignore warning, is a bug?
 	 */
 	def dispatch computeType(Bool type) {
 		"Boolean"

@@ -68,7 +68,7 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 			candidates.addAll(t.models)
 		}
 		val project = EcoreUtil2.getContainerOfType(context, Project)
-		val innerModels = project.models.filter[e | e.name !== null]
+		val innerModels = project.models.filter[e | e.name !== null] // TODO: necessary?
 		return Scopes.scopeFor(innerModels, Scopes.scopeFor(candidates))
 	}
 
