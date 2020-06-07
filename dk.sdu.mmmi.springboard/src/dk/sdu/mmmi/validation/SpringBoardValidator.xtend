@@ -26,6 +26,10 @@ import dk.sdu.mmmi.springBoard.Template
 import dk.sdu.mmmi.springBoard.Uses
 import java.util.ArrayList
 import dk.sdu.mmmi.springBoard.Service
+import javax.inject.Inject
+import dk.sdu.mmmi.springBoard.Exp
+import org.eclipse.emf.ecore.EReference
+import dk.sdu.mmmi.springBoard.BoolAnd
 
 /**
  * This class contains custom validation rules. 
@@ -131,6 +135,8 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 		}
 	}
 	
+	/* ------------- Template Validations ------------- */
+	
 	/**
 	 * Make sure unique naming is done when importing templates
 	 */
@@ -223,4 +229,36 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 		}
 		return templateList
 	}
+	
+	/* ------------- Logic Validations ------------- */
+	// TODO: requirement must refer to the field by name, either on right or left side, but not both
+	
+	@Inject extension LogicTyping logicTyping
+	
+	def private ExpressionsType getTypeAndCheckNotNull(Exp exp, EReference reference) {
+		var type = exp.typeFor
+		if (type == null)
+			error("null type", reference, "Type Mismatch")
+		return type;
+	}
+	
+	def private checkExpectedType(Exp exp,
+		ExpressionsType expectedType, EReference reference) {
+		val actualType = getTypeAndCheckNotNull(exp, reference)
+		if (actualType != expectedType)
+		error("expected " + expectedType +
+		" type, but was " + actualType,
+		reference, "Type Mismatch")
+	}
+	/* TODO chapter 8 side 185
+	@Check 
+	def checkType(BoolAnd and) {
+		checkExpectedType(and.left, ExpressionsType.BOOL_TYPE,
+		SpringBoardPackage.Literals.BOOL_AND__LEFT)
+		checkExpectedBoolean(and.right,
+		ExpressionsPackage.Literals.AND__RIGHT)
+	}
+	*/
+	
+	
 }

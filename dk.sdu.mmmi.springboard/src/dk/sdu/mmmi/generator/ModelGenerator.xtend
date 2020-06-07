@@ -19,7 +19,6 @@ import dk.sdu.mmmi.springBoard.Eq
 import dk.sdu.mmmi.springBoard.Gt
 import dk.sdu.mmmi.springBoard.Flt
 import javax.inject.Inject
-import dk.sdu.mmmi.springBoard.BoolLogic
 
 class ModelGenerator {
 	
@@ -78,7 +77,7 @@ class ModelGenerator {
 	'''
 	
 	def CharSequence generateInvariant(Field f)'''
-	if (!«f.inv.logic.genLogic») {
+	if (!«f.inv.logic.genExp») {
 		throw new IllegalArgumentException("Requirement not satisfied.");
 	}
 	'''

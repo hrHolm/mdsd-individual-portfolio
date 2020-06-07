@@ -35,23 +35,21 @@ Invariant:
 	'[' logic=BoolLogic ']'
 ;
 
-BoolLogic returns BoolLogic:
+BoolLogic returns Exp:
 	Conjunction ({BoolOr.left=current} '||' right=BoolLogic)?
 ;
 
-Conjunction returns BoolLogic:
-	BoolPrim ({BoolAnd.left=current} '&&' right=Conjunction)?
-;
-
-BoolPrim returns BoolLogic:
-	Requirement
-;
-
-Requirement:
-	left=Exp op=Operator right=Exp
+Conjunction returns Exp:
+	Exp ({BoolAnd.left=current} '&&' right=Conjunction)?
 ;
 
 Exp:
+	PlusMinus (
+		{Compare.left=current} op=Operator right=PlusMinus
+	)*
+;
+
+PlusMinus returns Exp:
 	MultDiv (
 		({Plus.left=current} '+' | {Minus.left=current} '-') right=MultDiv
 	)*
@@ -64,19 +62,11 @@ MultDiv returns Exp:
 ;
 
 Prim returns Exp:
-	Num | Parenthesis | Var
-;
-
-Var:
-	variable=[Field]
-;
-
-Parenthesis returns Exp:
+	{NumConst} value=INT | 
+	{StrConst} value=STRING | 
+	{BoolConst} value=('true'|'false') | 
+	{Var} variable=[Field] |
 	'(' Exp ')'
-;
-
-Num:
-	value=INT
 ;
 
 // Improved invariants END
