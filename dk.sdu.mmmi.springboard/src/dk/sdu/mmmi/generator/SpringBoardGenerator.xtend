@@ -228,10 +228,6 @@ class SpringBoardGenerator extends AbstractGenerator {
 		fsa.generateFile(projectName + "/" + "src/main/resources/application.properties", generateProperties())
 	}
 
-	/**
-	 * TODO: should probably be configurable instead of hardcoded database / 
-	 * OR: people should make this themselves
-	 */
 	def CharSequence generateProperties() '''
 		# H2
 		spring.datasource.url=jdbc:h2:mem:jpadb 
@@ -269,9 +265,7 @@ class SpringBoardGenerator extends AbstractGenerator {
 		return name
 	}
 
-	/**
-	 * TODO: perhaps include some way of configuring this?
-	 */
+
 	def CharSequence generatePom(String packName) '''
 		<?xml version="1.0" encoding="UTF-8"?>
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

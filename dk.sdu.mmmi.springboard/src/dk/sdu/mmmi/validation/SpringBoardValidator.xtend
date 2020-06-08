@@ -33,7 +33,6 @@ import dk.sdu.mmmi.springBoard.BoolAnd
 import dk.sdu.mmmi.springBoard.BoolOr
 import dk.sdu.mmmi.springBoard.Minus
 import dk.sdu.mmmi.springBoard.Compare
-import com.ibm.icu.impl.duration.impl.DataRecord.EZeroHandling
 import dk.sdu.mmmi.springBoard.Plus
 
 /**
@@ -236,7 +235,6 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 	}
 	
 	/* ------------- Logic Validations ------------- */
-	// TODO: requirement must refer to the field by name, either on right or left side, but not both
 	
 	@Inject extension LogicTyping logicTyping
 	

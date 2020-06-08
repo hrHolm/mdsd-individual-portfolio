@@ -25,9 +25,7 @@ class ModelGenerator {
 	@Inject extension InvariantGenerator invariantGenerator
 	
 	val mavenSrcStructure = "src/main/java/"
-	/**
-	 * TODO: instead of importing all models, we could check for inheritance and fields using a model type!
-	 */
+	
 	def CharSequence generateModel(Model model, String packName, boolean hasSubclasses)'''
 	package «packName».models;
 	

@@ -21,7 +21,6 @@ class InvariantGenerator {
 
 	def dispatch CharSequence genExp(BoolAnd logic) '''(«logic.left.genExp» && «logic.right.genExp»)'''
 
-	// bangs in front of or-expressions, in order to introduce double negation
 	def dispatch CharSequence genExp(BoolOr logic) '''(«logic.left.genExp» || «logic.right.genExp»)'''
 
 	def dispatch CharSequence genExp(Compare logic) '''(«logic.left.genExp» «logic.op.genOp» «logic.right.genExp»)'''

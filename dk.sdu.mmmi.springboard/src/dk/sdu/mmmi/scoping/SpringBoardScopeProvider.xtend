@@ -68,11 +68,11 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 			candidates.addAll(t.models)
 		}
 		val project = EcoreUtil2.getContainerOfType(context, Project)
-		val innerModels = project.models.filter[e | e.name !== null] // TODO: necessary?
+		val innerModels = project.models.filter[e | e.name !== null]
 		return Scopes.scopeFor(innerModels, Scopes.scopeFor(candidates))
 	}
 
-	//TODO: if enough time, add support for extended fields in models
+	
 	def protected IScope scopeForTypeReference(EObject context, EReference reference) {
 		var methods = EcoreUtil2.getContainerOfType(context, Method);
 		val candidates = new ArrayList<Field>
