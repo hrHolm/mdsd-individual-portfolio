@@ -18,13 +18,14 @@ import dk.sdu.mmmi.springBoard.Int
 
 class LogicTyping {
 	
-	def dispatch ExpressionsType typeFor(Exp e) {
+	def ExpressionsType typeFor(Exp e) {
 		switch (e) {
 			StrConst: STRING_TYPE
 			NumConst: INT_TYPE
 			BoolConst: BOOL_TYPE
 			Mult: INT_TYPE
 			Div: INT_TYPE
+			Plus: INT_TYPE
 			Minus: INT_TYPE
 			Compare: BOOL_TYPE
 			BoolAnd: BOOL_TYPE
@@ -40,17 +41,6 @@ class LogicTyping {
 			Int : INT_TYPE
 		}
 	}
-	
-	def dispatch ExpressionsType typeFor(Plus e) {
-		val leftType = e.left.typeFor
-		val rightType = e.right?.typeFor
-		if (leftType === STRING_TYPE || rightType === STRING_TYPE) {
-			return STRING_TYPE
-		} else {
-			return INT_TYPE
-		}
-	}
-
 }
 
 

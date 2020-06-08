@@ -66,7 +66,7 @@ Prim returns Exp:
 	{StrConst} value=STRING | 
 	{BoolConst} value=('true'|'false') | 
 	{Var} variable=[Field] |
-	'(' Exp ')'
+	'(' BoolLogic ')'
 ;
 
 // Improved invariants END
@@ -103,7 +103,7 @@ Request returns Request:
 ;
 
 Res:
-	'{' comp=Comp'}'
+	'{' comp=Comp '}'
 ;
 
 Comp:

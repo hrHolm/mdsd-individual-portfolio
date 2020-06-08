@@ -67,8 +67,9 @@ class ModelGenerator {
 		public void set«f.name.toFirstUpper» («computeType(f.type)» «f.name») «IF f.inv !== null»throws IllegalArgumentException«ENDIF» {
 			«IF f.inv !== null»
 			«generateInvariant(f)»
-			«ENDIF»
+			«ELSE»
 			this._«f.name» = «f.name»;
+			«ENDIF»
 		}
 		
 		«ENDFOR»
@@ -77,7 +78,9 @@ class ModelGenerator {
 	'''
 	
 	def CharSequence generateInvariant(Field f)'''
-	if (!«f.inv.logic.genExp») {
+	if («f.inv.logic.genExp») {
+		this._«f.name» = «f.name»;
+	} else {
 		throw new IllegalArgumentException("Requirement not satisfied.");
 	}
 	'''

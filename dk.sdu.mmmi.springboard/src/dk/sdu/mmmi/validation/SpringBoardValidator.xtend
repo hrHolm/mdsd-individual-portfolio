@@ -30,6 +30,11 @@ import javax.inject.Inject
 import dk.sdu.mmmi.springBoard.Exp
 import org.eclipse.emf.ecore.EReference
 import dk.sdu.mmmi.springBoard.BoolAnd
+import dk.sdu.mmmi.springBoard.BoolOr
+import dk.sdu.mmmi.springBoard.Minus
+import dk.sdu.mmmi.springBoard.Compare
+import com.ibm.icu.impl.duration.impl.DataRecord.EZeroHandling
+import dk.sdu.mmmi.springBoard.Plus
 
 /**
  * This class contains custom validation rules. 
@@ -237,28 +242,56 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 	
 	def private ExpressionsType getTypeAndCheckNotNull(Exp exp, EReference reference) {
 		var type = exp.typeFor
-		if (type == null)
-			error("null type", reference, "Type Mismatch")
+		if (type === null)
+			error("Null type", reference)
 		return type;
 	}
 	
-	def private checkExpectedType(Exp exp,
-		ExpressionsType expectedType, EReference reference) {
+	def private checkExpectedType(Exp exp, ExpressionsType expectedType, EReference reference) {
 		val actualType = getTypeAndCheckNotNull(exp, reference)
-		if (actualType != expectedType)
-		error("expected " + expectedType +
-		" type, but was " + actualType,
-		reference, "Type Mismatch")
+		if (actualType != expectedType) {
+			error("expected " + expectedType + " type, but was " + actualType, reference)
+			}
 	}
-	/* TODO chapter 8 side 185
+
 	@Check 
 	def checkType(BoolAnd and) {
-		checkExpectedType(and.left, ExpressionsType.BOOL_TYPE,
-		SpringBoardPackage.Literals.BOOL_AND__LEFT)
-		checkExpectedBoolean(and.right,
-		ExpressionsPackage.Literals.AND__RIGHT)
+		checkExpectedType(and.left, ExpressionsType.BOOL_TYPE, SpringBoardPackage.Literals.BOOL_AND__LEFT)
+		checkExpectedType(and.right, ExpressionsType.BOOL_TYPE, SpringBoardPackage.Literals.BOOL_AND__RIGHT)
 	}
-	*/
 	
+	@Check 
+	def checkType(BoolOr or) {
+		checkExpectedType(or.left, ExpressionsType.BOOL_TYPE, SpringBoardPackage.Literals.BOOL_OR__LEFT)
+		checkExpectedType(or.right, ExpressionsType.BOOL_TYPE, SpringBoardPackage.Literals.BOOL_OR__RIGHT)
+	}
 	
+	@Check 
+	def checkType(Minus minus) {
+		checkExpectedType(minus.left, ExpressionsType.INT_TYPE, SpringBoardPackage.Literals.MINUS__LEFT)
+		checkExpectedType(minus.right, ExpressionsType.INT_TYPE, SpringBoardPackage.Literals.MINUS__RIGHT)
+	}
+	
+	/**
+	 * String concatenation is not supported in this domain
+	 */
+	@Check 
+	def checkType(Plus plus) {
+		checkExpectedType(plus.left, ExpressionsType.INT_TYPE, SpringBoardPackage.Literals.PLUS__LEFT)
+		checkExpectedType(plus.right, ExpressionsType.INT_TYPE, SpringBoardPackage.Literals.PLUS__RIGHT)
+	}
+	
+	@Check def checkType(Compare comparison) {
+		val leftType = getTypeAndCheckNotNull(comparison.left, SpringBoardPackage.Literals.COMPARE__LEFT)
+		val rightType = getTypeAndCheckNotNull(comparison.right, SpringBoardPackage.Literals.COMPARE__RIGHT)
+		if (leftType !== rightType) {
+			error('''Comparisons can only be done on the same type. Current types are «leftType» and «rightType»''', SpringBoardPackage.Literals.COMPARE__OP)
+		}
+		if (leftType == ExpressionsType.BOOL_TYPE) {
+			error('''Cannot be a boolean type''', SpringBoardPackage.Literals.COMPARE__LEFT)
+		}
+		if (rightType == ExpressionsType.BOOL_TYPE) {
+			error('''Cannot be a boolean type''', SpringBoardPackage.Literals.COMPARE__RIGHT)
+		}
+	}
 }
