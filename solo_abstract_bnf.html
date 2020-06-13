@@ -1,0 +1,22 @@
+<p><strong>SpringBoard</strong> ::= (<em>Template</em> | <em>Project</em>)+<br />
+<strong>Template</strong> ::= 'template' ID 'models' ':' <em>Model</em>+ 'services' ':' <em>Service</em>+<br />
+<strong>Project</strong> ::= 'project' ID 'package' ':' <em>Package</em> ('uses' <em>ID<sup>Template</sup></em>)? 'models' ':' <em>Model</em>+ 'services' ':' <em>Service</em>+<br />
+<strong>Package</strong> ::= ID ('.' <em>Package</em>)?<br />
+<strong>Model</strong> ::= (('extension' 'of' <em>ID<sup>Model</sup></em>)? | ID <em>Inherits</em>?) '{' <em>Field</em>* '}'<br />
+<strong>Inherits</strong> ::= 'inherits' <em>ID<sup>Model</sup></em><br />
+<strong>Field</strong> ::= ID ':' <em>Type</em> <em>Invariant</em>?<br />
+<strong>Type</strong> ::= 'string' | 'datetime' | 'long | 'int' | 'bool' | 'float' | <em>ID<sup>Model</sup></em> | 'list' 'of' <em>Type</em> | 'ID'<br />
+<strong>Invariant</strong> ::= '[' <em>BoolLogic</em> ']'<br />
+<strong>BoolLogic</strong> ::= <em>ExpComp</em> | '(' BoolLogic ')' | <em>BoolLogic</em> '||' <em>BoolLogic</em> | <em>BoolLogic</em> '&amp;&amp;' <em>BoolLogic</em><br />
+<strong>ExpComp</strong> ::= <em>Exp</em> <em>Operator</em> <em>Exp</em><br />
+<strong>Exp</strong> ::= <em>Prim</em> | <em>Exp</em> ('+' | '-') <em>Exp</em> | <em>Exp</em> ('*' | '/') <em>Exp</em><br />
+<strong>Prim</strong> ::= <em>INT</em> | <em>STRING</em> | ('true' | 'false') | <em>ID<sup>Field</sup></em> | '(' Exp ')'<br />
+<strong>Operator</strong> ::= '&lt;' | '&gt;' | '=' | '&lt;=' | '&gt;=' | '&lt;&gt;'<br />
+<strong>Service</strong> ::= ('extension' 'of')? <em>ID<sup>Model</sup></em> '{' <em>CRUD</em>? <em>Method</em>* '}'<br />
+<strong>CRUD</strong> ::= '[' 'C'? 'R'? 'U'? 'D'? ']'<br />
+<strong>Method</strong> ::= <em>Request</em> ID <em>Input</em> ':' <em>Type</em> <em>RES</em><br />
+<strong>Request</strong> ::= 'local' | 'POST' | 'GET' | 'PUT' | 'DELETE'<br />
+<strong>RES</strong> ::= '{' <em>Comparison</em> '}'<br />
+<strong>Comparison</strong> ::= <em>ARGS</em> <em>Operator</em> <em>Field</em><br />
+<strong>Input</strong> ::= <em>Input</em> '(' <em>ARGS</em>? ')'<br />
+<strong>ARGS</strong> :: = ID ':' <em>Type</em> (',' <em>ARGS</em>)?</p>
