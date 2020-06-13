@@ -62,16 +62,11 @@ class SpringBoardGenerator extends AbstractGenerator {
 			projectServices.forEach [ element |
 				serviceGenerator.createService(fsa, packName, element, projectName);
 				serviceGenerator.createAbstractService(fsa, packName, element, projectName)
+				controllerGenerator.createController(element, fsa, packName, projectName, isASubClass(element.base))
 			]
 			projectModels.forEach [ element |
 				modelGenerator.createModel(element, fsa, packName, hasSubclasses(element, springProject), projectName)
 				repositoryGenerator.createRepository(element, fsa, packName, modelsWithSubClasses, projectName)
-				(springProject.services.forEach [ serviceElement |
-					if (serviceElement.base.name == element.name) {
-						controllerGenerator.createController(element, serviceElement, fsa, packName, projectName,
-							isASubClass(element))
-					}
-				])
 			]
 		}
 

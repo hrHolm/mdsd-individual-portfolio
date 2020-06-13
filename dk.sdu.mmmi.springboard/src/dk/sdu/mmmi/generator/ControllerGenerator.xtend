@@ -23,76 +23,74 @@ class ControllerGenerator {
 
 	val mavenSrcStructure = "src/main/java/"
 
-	def CharSequence generateController(Model model, Service service, String packName, boolean isASubClass) {
+	def CharSequence generateController(Service service, String packName, boolean isASubClass) {
 		'''
 package «packName».controllers;
 import «packName».models.*;
 import org.springframework.web.bind.annotation.*;
-import «packName».services.I«model.name»;
+import «packName».services.I«service.base.name»;
 import javax.validation.Valid;
 import java.util.List;
 import java.time.LocalDateTime;
 
 @RestController
-public class «model.name»Controller {
+public class «service.base.name»Controller {
 	
-	private I«model.name» «model.name.toFirstLower»Service;
+	private I«service.base.name» «service.base.name.toFirstLower»Service;
 	
-	public «model.name»Controller(I«model.name» «model.name.toFirstLower»Service) {
-	    this.«model.name.toFirstLower»Service =  «model.name.toFirstLower»Service;
+	public «service.base.name»Controller(I«service.base.name» «service.base.name.toFirstLower»Service) {
+	    this.«service.base.name.toFirstLower»Service =  «service.base.name.toFirstLower»Service;
 	}
 	
 	«IF service.crud !== null»
-	«generateCRUDMethods(service, model)»
+	«generateCRUDMethods(service)»
 	«ENDIF»
-	«generateServiceMethods(service, model)»
+	«generateServiceMethods(service)»
 }
 '''
 	}
 
-	def createController(Model model, Service service, IFileSystemAccess2 fsa, String packName, String projectName, boolean isASubClass) {
-		//if (!isASubClass) {
-			fsa.generateFile(projectName + "/" + mavenSrcStructure + packName.replace('.', '/') + "/controllers/" + model.name + "Controller.java",
-				generateController(model, service, packName, isASubClass)
-			)
-		//}
+	def createController(Service service, IFileSystemAccess2 fsa, String packName, String projectName, boolean isASubClass) {
+		fsa.generateFile(projectName + "/" + mavenSrcStructure + packName.replace('.', '/') + "/controllers/" + service.base.name + "Controller.java",
+			generateController(service, packName, isASubClass)
+		)
 	}
 
-	def generateCRUDMethods(Service service, Model model) {
+	def generateCRUDMethods(Service service) {
 		'''
 			«FOR a : service.crud.act»
 				«IF a == CRUDActions.C»
-					@PostMapping("/api/«model.name.toLowerCase»")
-					public «model.name» create«model.name»(@Valid @RequestBody «model.name» «model.name.toFirstLower») {
-						return «model.name.toFirstLower»Service.create(«model.name.toFirstLower»);
+					@PostMapping("/api/«service.base.name.toLowerCase»")
+					public «service.base.name» create«service.base.name»(@Valid @RequestBody «service.base.name» «service.base.name.toFirstLower») {
+						return «service.base.name.toFirstLower»Service.create(«service.base.name.toFirstLower»);
 					}
 					
 				«ENDIF»
 				«IF a == CRUDActions.R»
-					@GetMapping("/api/«model.name.toLowerCase»/{id}")
-					public «model.name» find(@PathVariable Long id) {
-						return «model.name.toFirstLower»Service.find(id);
+					@GetMapping("/api/«service.base.name.toLowerCase»/{id}")
+					public «service.base.name» find(@PathVariable Long id) {
+						return «service.base.name.toFirstLower»Service.find(id);
 					}
 					
-					@GetMapping("/api/«model.name.toLowerCase»/all")
-					public List<«model.name»> findAll() {
-						return «model.name.toFirstLower»Service.findAll();
+					@GetMapping("/api/«service.base.name.toLowerCase»/all")
+					public List<«service.base.name»> findAll() {
+						return «service.base.name.toFirstLower»Service.findAll();
 					}
 					
 				«ENDIF»
 				«IF a == CRUDActions.U»
-					@PutMapping("/api/«model.name.toLowerCase»")
+					@PutMapping("/api/«service.base.name.toLowerCase»")
 					@ResponseBody
-					public void update(@RequestBody «model.name» «model.name.toFirstLower») {
-						«model.name.toFirstLower»Service.update(«model.name.toFirstLower»);
+					public void update(@RequestBody «service.base.name» «service.base.name.toFirstLower») {
+						«service.base.name.toFirstLower»Service.update(«service.base.name.toFirstLower»);
 					}
 					
 				«ENDIF»
 				«IF a == CRUDActions.D»
-					@DeleteMapping("/api/«model.name.toLowerCase»/{id}")
+					@DeleteMapping("/api/«service.base.name.toLowerCase»/{id}")
 					@ResponseBody
 					public void delete(@PathVariable Long id) {
-					    «model.name.toFirstLower»Service.delete(id);
+					    «service.base.name.toFirstLower»Service.delete(id);
 					}
 					
 				«ENDIF»
@@ -100,11 +98,11 @@ public class «model.name»Controller {
 		'''
 	}
 
-	def generateServiceMethods(Service service, Model model)'''
+	def generateServiceMethods(Service service)'''
 			«FOR m : service.methods.filter[m | !(m.req instanceof Local)]»
-			@«m.req.showReq»Mapping("/api/«model.name.toLowerCase»/«m.name.toLowerCase»")
+			@«m.req.showReq»Mapping("/api/«service.base.name.toLowerCase»/«m.name.toLowerCase»")
 			«m.type.show» «m.name»(«IF m.inp.args !== null»«m.inp.args.show»«ENDIF»){
-				return 	«model.name.toFirstLower»Service.«m.name»(«IF m.inp.args !== null»«m.inp.args.showName»«ENDIF»);
+				return 	«service.base.name.toFirstLower»Service.«m.name»(«IF m.inp.args !== null»«m.inp.args.showName»«ENDIF»);
 			}
 			
 			«ENDFOR»
