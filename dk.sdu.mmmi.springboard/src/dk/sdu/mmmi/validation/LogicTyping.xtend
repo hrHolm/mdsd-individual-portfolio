@@ -43,7 +43,6 @@ class LogicTyping {
 	}
 }
 
-
 enum ExpressionsType {
 	STRING_TYPE,
 	INT_TYPE,

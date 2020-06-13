@@ -68,8 +68,8 @@ Prim returns Exp:
 	{Var} variable=[Field] |
 	'(' BoolLogic ')'
 ;
-
 // Improved invariants END
+
 Operator returns Operator:
 	{Lt} '<' | {Gt} '>' | {Eq} '=' | {Lteq} '<=' | {Gteq} '>=' | {Neq} '<>'
 ;

@@ -51,25 +51,22 @@ class SpringBoardScopeProvider extends AbstractSpringBoardScopeProvider {
 	}
 
 	/**
-	 * Provides a nested scope for all templates' models (called candidates) and as outer scope, the project's own definitions (via super.getScope)
-	 * Note: even templates not necessarily imported gets visible, and therefore needs a corresponding validity check
-	 * 
-	 * 
 	 * Having the template models as outer scope ensures that projects that the projects own definitions comes first
-	 * when looking for a reference. This is important when you dont want to use a template, but want to use the same
+	 * when looking for a reference. This is important when you don't want to use a template, but want to use the same
 	 * name of the models
 	 */ 
 	def protected IScope scopeForModelReference(EObject context, EReference reference) {
 		val springBoard = EcoreUtil2.getContainerOfType(context, SpringBoard)
-		val candidates = new ArrayList<Model>
-
-		var List<Template> templates = springBoard.declarations.filter(Template).toList
-		for (Template t : templates) {
-			candidates.addAll(t.models)
+		
+		val templateModels = new ArrayList<Model>
+		for (Template t : springBoard.declarations.filter(Template).toList) {
+			templateModels.addAll(t.models)
 		}
+		
 		val project = EcoreUtil2.getContainerOfType(context, Project)
 		val innerModels = project.models.filter[e | e.name !== null]
-		return Scopes.scopeFor(innerModels, Scopes.scopeFor(candidates))
+		
+		return Scopes.scopeFor(innerModels, Scopes.scopeFor(templateModels))
 	}
 
 	
