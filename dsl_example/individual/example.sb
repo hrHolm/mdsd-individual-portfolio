@@ -1,0 +1,99 @@
+template UserManagement
+	models :
+		User {
+			id : ID
+			name : string [name <> "" && name <> "admin"]  
+ 		} 
+	services : 
+		User {
+			[ C R D U ]
+			POST auth() : bool
+			local makeAdmin( user : User ) : bool
+		}
+template ProductSystem 
+	models :
+		ProductLineItem { 
+			id : ID
+			product : Product*
+		}
+		Product { 
+			id : ID
+			name : string
+			price : float
+		}
+	services :
+		ProductLineItem {
+			[ C R U D ] 
+		}
+		Product {
+			[ C R U D ]
+		}
+project Library 
+	package : dk.sdu.mmmi.library
+	uses UserManagement
+	models : 
+		extension of User { 
+			age : int [(age > 13 + 1 && age < 109 - 1) || age < 100 / 1 && age * 1 > 3 && age <> 0] //example of new requirement support
+			loans : List of Loan 
+		}
+	    Loan {
+	        id : ID
+	        startDate : datetime
+	        endDate : datetime 
+	        returned : bool 
+	        user : User
+	        loaned : Media*
+	    }
+	    Media {  
+	    	id : ID
+	        name : string [name <> ""]  
+	        published : datetime 
+	    }
+	    Book inherits Media { 
+	        isbn13 : string  
+	        pageCount : int [pageCount > 0] 
+	        language : string
+	    }
+	    Paper inherits Book {  
+	    	doi : string
+	    }
+	services :
+	    extension of User { //example of both shadowing and new methods
+	    	[ R D ]
+	    	local makeAdmin() : bool 
+	    	local updateUser(user : User) : bool
+	    }
+	    Media { [ C R U D ] }
+	    Loan { 
+	        [C R U ]
+	        GET overdueLoans ( currDate : datetime ): List of Loan  { currDate > endDate }
+	        GET specificMediaLoan ( media : Media ): List of Loan 
+	    }
+project Shop
+	package : dk.sdu.mmmi.mdsd.shop
+	uses UserManagement, ProductSystem
+	models :
+		Order {
+			id : ID
+			orderNumber : long
+			products : List of ProductLineItem  
+			customer : User 
+			date : datetime
+		}
+		extension of User {
+			orders : List of Order 
+			address : Address
+			email : string
+			phoneNumber : string
+		}
+		Address {
+			id : ID
+			streetName : string 
+			houseNumber : int
+			apartmentDetails : string
+			zipCode : int
+		}
+		services :
+			Order {
+			[ C R U ]
+		}
