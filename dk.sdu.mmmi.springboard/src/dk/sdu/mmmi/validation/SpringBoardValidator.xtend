@@ -34,6 +34,8 @@ import dk.sdu.mmmi.springBoard.BoolOr
 import dk.sdu.mmmi.springBoard.Minus
 import dk.sdu.mmmi.springBoard.Compare
 import dk.sdu.mmmi.springBoard.Plus
+import dk.sdu.mmmi.springBoard.Eq
+import dk.sdu.mmmi.springBoard.Neq
 
 /**
  * This class contains custom validation rules. 
@@ -290,6 +292,11 @@ class SpringBoardValidator extends AbstractSpringBoardValidator {
 		}
 		if (rightType == ExpressionsType.BOOL_TYPE) {
 			error('''Cannot be a boolean type''', SpringBoardPackage.Literals.COMPARE__RIGHT)
+		}
+		if (leftType == ExpressionsType.STRING_TYPE) { // we can simply check the left here, since left and right will be same type
+			if (!(comparison.op instanceof Eq) && !(comparison.op instanceof Neq)) {
+				error('''Strings can only be compared based on equality''', SpringBoardPackage.Literals.COMPARE__OP)
+			}
 		}
 	}
 }
